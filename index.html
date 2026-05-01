@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laundry Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stats { display: flex; gap: 20px; flex-wrap: wrap; }
+        .stat-box { background: #e0f7fa; padding: 15px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center; border: 1px solid #b2ebf2; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-RECEIVED { background: #fff3cd; color: #856404; }
+        .status-PROCESSING { background: #cce5ff; color: #004085; }
+        .status-READY { background: #d4edda; color: #155724; }
+        .status-DELIVERED { background: #e2e3e5; color: #383d41; }
+        button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧺 Laundry Admin Dashboard</h1>
+        
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Overview</h2>
+                <button onclick="loadDashboard()">↻ Refresh Data</button>
+            </div>
+            <div class="stats" id="dashboard-stats" style="margin-top: 15px;">
+                <!-- Stats injected here -->
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Order History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table">
+                    <!-- Orders injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                // Fetch Stats
+                const res = await fetch('/api/dashboard');
+                const data = await res.json();
+                
+                let statsHtml = `
+                    <div class="stat-box"><h3>Total Orders</h3><h2>${data.totalOrders}</h2></div>
+                    <div class="stat-box"><h3>Total Revenue</h3><h2>$${data.totalRevenue.toFixed(2)}</h2></div>
+                `;
+                
+                for (const [status, count] of Object.entries(data.ordersPerStatus)) {
+                    statsHtml += `<div class="stat-box" style="background:#f8f9fa; border-color:#ddd;"><h3>${status}</h3><h2>${count}</h2></div>`;
+                }
+                document.getElementById('dashboard-stats').innerHTML = statsHtml;
+
+                // Fetch Orders
+                const ordersRes = await fetch('/api/orders');
+                const orders = await ordersRes.json();
+                const tableBody = document.getElementById('orders-table');
+                tableBody.innerHTML = '';
+                
+                orders.forEach(order => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td style="font-family: monospace; color: #666;">${order.id.substring(0,8)}</td>
+                            <td><strong>${order.customer_name}</strong></td>
+                            <td>${order.phone}</td>
+                            <td>$${order.total_amount.toFixed(2)}</td>
+                            <td><span class="badge status-${order.status}">${order.status}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Failed to load dashboard data:", error);
+            }
+        }
+        
+        // Initial load
+        loadDashboard();
+    </script>
+</body>
+</html>
