@@ -6,7 +6,7 @@
     <title>Laundry Dashboard</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .stats { display: flex; gap: 20px; flex-wrap: wrap; }
         .stat-box { background: #e0f7fa; padding: 15px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center; border: 1px solid #b2ebf2; }
@@ -18,8 +18,9 @@
         .status-PROCESSING { background: #cce5ff; color: #004085; }
         .status-READY { background: #d4edda; color: #155724; }
         .status-DELIVERED { background: #e2e3e5; color: #383d41; }
-        button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;}
         button:hover { background: #0056b3; }
+        .garment-list { font-size: 12px; color: #555; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -44,8 +45,10 @@
                         <th>Order ID</th>
                         <th>Customer</th>
                         <th>Phone</th>
+                        <th>Items</th>
                         <th>Amount</th>
                         <th>Status</th>
+                        <th>Est. Delivery</th>
                     </tr>
                 </thead>
                 <tbody id="orders-table">
@@ -79,13 +82,24 @@
                 tableBody.innerHTML = '';
                 
                 orders.forEach(order => {
+                    const deliveryDate = new Date(order.estimated_delivery).toLocaleDateString();
+                    
+                    // Parse garments JSON to show a quick summary
+                    let itemsHtml = '';
+                    try {
+                        const garments = JSON.parse(order.garments);
+                        itemsHtml = garments.map(g => `${g.quantity}x ${g.type}`).join(', ');
+                    } catch(e) { itemsHtml = 'N/A'; }
+
                     tableBody.innerHTML += `
                         <tr>
                             <td style="font-family: monospace; color: #666;">${order.id.substring(0,8)}</td>
                             <td><strong>${order.customer_name}</strong></td>
                             <td>${order.phone}</td>
+                            <td><div class="garment-list">${itemsHtml}</div></td>
                             <td>$${order.total_amount.toFixed(2)}</td>
                             <td><span class="badge status-${order.status}">${order.status}</span></td>
+                            <td>⏳ ${deliveryDate}</td>
                         </tr>
                     `;
                 });
